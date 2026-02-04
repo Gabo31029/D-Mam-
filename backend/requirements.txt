@@ -5,6 +5,7 @@ pydantic
 python-dotenv
 jinja2
 python-multipart
+python-jose[cryptography]
 # PDF generation
 reportlab
 requests
