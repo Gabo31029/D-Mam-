@@ -4,7 +4,9 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session, joinedload
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
-from .. import crud, models, schemas, database
+import crud
+import models
+import schemas
 from ..database import get_db
 
 router = APIRouter()
