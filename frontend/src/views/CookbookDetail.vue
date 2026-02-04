@@ -17,16 +17,9 @@ const isOwner = computed(() => {
 
 const downloadPdf = async () => {
     try {
-        const response = await api.get(`/cookbooks/${route.params.id}/pdf`, {
-            responseType: 'blob'
-        });
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', `${cookbook.value.title}.pdf`);
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
+        const response = await api.get(`/cookbooks/${route.params.id}/pdf`);
+        const url = response.data.url;
+        window.open(url, '_blank');
     } catch (err) {
         console.error("Error downloading PDF", err);
         alert("Error al generar PDF");
