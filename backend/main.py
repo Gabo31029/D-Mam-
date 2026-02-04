@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .database import engine, Base
+from database import engine, Base
 from fastapi.staticfiles import StaticFiles
 from .routers import auth, recipes, cookbooks, upload
 from dotenv import load_dotenv
