@@ -1,66 +1,105 @@
-# 🍳 Proyecto Recetario (Production Ready)
+# 🍳 Proyecto Recetario (D'Mamá)
 
-Aplicación web full-stack para gestión de recetas, preparada para despliegue en producción con Docker, PostgreSQL y Cloudinary.
+Aplicación web full-stack para gestión de recetas con diseño editorial y funcionalidades modernas, impulsada por tecnología escalable.
 
 ![Estado](https://img.shields.io/badge/Production-Ready-green?style=flat-square)
-![Stack](https://img.shields.io/badge/Stack-FastAPI%20%2B%20Vue%203%20%2B%20Postgres-blue?style=flat-square)
+![Stack](https://img.shields.io/badge/Stack-FastAPI%20%2B%20Vue%203%20%2B%20Supabase-blue?style=flat-square)
+![Deploy](https://img.shields.io/badge/Deploy-Vercel-black?style=flat-square&logo=vercel)
 
-## 🚀 Despliegue en Render
+## 🚀 Arquitectura y Tecnologías
 
-Este proyecto está optimizado para desplegarse en [Render.com](https://render.com).
+El proyecto utiliza una arquitectura moderna y desacoplada:
 
-### 1. Base de Datos (PostgreSQL)
-Crea un servicio **PostgreSQL** en Render.
-- Copia la `Internal Database URL` (para el backend en Render).
+- **Frontend**: Vue 3 + Vite + TailwindCSS. Diseño responsivo y "Mobile First". Alojado en **Vercel**.
+- **Backend**: FastAPI (Python). API RESTful de alto rendimiento. Alojado en **Vercel** (Serverless Functions) o servicio compatible.
+- **Base de Datos**: PostgreSQL (vía **Supabase**).
+- **Almacenamiento**: Supabase Storage (para imágenes de recetas y PDFs).
+- **Autenticación**: JWT (JSON Web Tokens).
 
-### 2. Backend (Web Service)
-Crea un **Web Service** conectado a este repositorio.
-- **Root Directory**: `backend`
-- **Environment**: Python 3
-- **Build Command**: `pip install -r requirements.txt`
-- **Start Command**: `gunicorn -k uvicorn.workers.UvicornWorker main:app`
-- **Variables de Entorno**:
-    - `DATABASE_URL`: URL de tu base de datos Postgres.
-    - `SECRET_KEY`: Una cadena larga y segura.
-    - `ALLOWED_ORIGINS`: `https://tu-frontend.onrender.com`
+## 🛠️ Configuración Local
 
-### 3. Frontend (Static Site)
-Crea un **Static Site** en Render.
-- **Root Directory**: `frontend`
-- **Build Command**: `npm install && npm run build`
-- **Publish Directory**: `dist`
-- **Variables de Entorno**:
-    - `VITE_API_URL`: `https://tu-backend.onrender.com`
-
-## 🐳 Docker (Desarrollo Local)
-
-Puedes levantar todo el entorno (Base de datos, Backend, Frontend) usando Docker Compose.
+### 1. Clonar el repositorio
 
 ```bash
-docker-compose up --build
+git clone https://github.com/Gabo31029/D-Mam-.git
+cd D-Mam-
 ```
 
-- **Frontend**: http://localhost:8080
-- **Backend API**: http://localhost:8000
-- **Base de Datos**: Puerto 5432
+### 2. Backend (FastAPI)
 
-## 🛠️ Variables de Entorno
+```bash
+cd backend
+python -m venv venv
+# Windows
+venv\Scripts\activate
+# Mac/Linux
+source venv/bin/activate
 
-| Variable | Descripción |
-|----------|-------------|
-| `DATABASE_URL` | Connection string de PostgreSQL (o SQLite en local) |
-| `SECRET_KEY` | Llave para firmar tokens JWT |
-| `ALLOWED_ORIGINS` | Orígenes permitidos para CORS (separados por coma) |
-| `CLOUDINARY_*` | Credenciales para subida de imágenes |
-| `VITE_API_URL` | URL del backend (Frontend only) |
+pip install -r requirements.txt
+```
 
-## 🧪 Tests y Calidad
+Crea un archivo `.env` en la carpeta `backend/` con las siguientes variables de Supabase:
 
-El proyecto incluye configuración para despliegue robusto:
-- **Gunicorn**: Servidor de aplicaciones de producción.
-- **PostgreSQL**: Base de datos relacional robusta.
-- **Cloudinary**: CDN para imágenes.
-- **Docker**: Contenedorización para consistencia.
+```env
+SUPABASE_URL="tu_url_de_supabase"
+SUPABASE_KEY="tu_anon_public_key"
+SECRET_KEY="tu_secret_para_jwt"
+ALLOWED_ORIGINS="http://localhost:5173,https://tu-proyecto.vercel.app"
+```
+
+Para correr el servidor localmente:
+
+```bash
+uvicorn main:app --reload
+```
+
+### 3. Frontend (Vue 3)
+
+```bash
+cd frontend
+npm install
+```
+
+Crea un archivo `.env` en la carpeta `frontend/`:
+
+```env
+VITE_API_URL="http://localhost:8000"
+```
+
+_(Para producción, VITE_API_URL debe apuntar a la URL de tu backend)_
+
+Para correr el frontend:
+
+```bash
+npm run dev
+```
+
+## ☁️ Despliegue en Vercel
+
+Este proyecto está configurado para desplegarse fácilmente en Vercel.
+
+1.  Conecta tu repositorio de GitHub a Vercel.
+2.  Configura el **Root Directory** del frontend (si prefieres separar deployments) o usa la configuración `vercel.json` incluida para el manejo de rutas SPA.
+3.  **Variables de Entorno en Vercel**:
+    - Agrega las mismas variables (`SUPABASE_URL`, `SUPABASE_KEY`, `SECRET_KEY`) en la configuración del proyecto en Vercel.
+    - Asegúrate de que `VITE_API_URL` en el frontend apunte a la URL de producción de tu API.
+
+## ✅ Funcionalidades Actuales
+
+- Gestión completa de Recetas (CRUD).
+- Filtrado dinámico por país/región y tipo de plato.
+- Generación automática de PDFs de recetas.
+- Autenticación de usuarios (Registro/Login).
+- Colecciones de recetas (Cookbooks).
+- Diseño responsive adaptado a dispositivos móviles.
+
+## 🔮 Próximos Pasos
+
+- Implementar mayor seguridad (Rate limiting, validaciones extendidas).
+- Implementar registro con OAuth (Google/GitHub).
+- Implementar carga de imágenes con IA para transcripción automática a receta digitalizada.
 
 ---
-Desarrollado con estándares de ingeniería de software.
+
+**Open Source Project made by Gabriel Chupa :)**
+_Developed using software engineering standards._
