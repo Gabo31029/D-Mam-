@@ -38,7 +38,13 @@ async def startup_event():
 
 
 # Mount static files
-app.mount("/static", StaticFiles(directory="backend/static"), name="static")
+# Mount static files if directory exists
+import os
+static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+if os.path.exists(static_dir):
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+else:
+    logger.warning(f"Static directory '{static_dir}' not found. Skipping mount.")
 
 app.include_router(auth.router)
 app.include_router(recipes.router)
