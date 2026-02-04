@@ -7,7 +7,7 @@ from jose import JWTError, jwt
 import crud
 import models
 import schemas
-from ..database import get_db
+from database import get_db
 
 router = APIRouter()
 
