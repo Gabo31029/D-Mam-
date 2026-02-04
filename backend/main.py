@@ -14,10 +14,10 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Recetario API")
 
 # CORS setup
-origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
+# CORS setup
+# In production, set ALLOWED_ORIGINS to "https://recetario.onrender.com,https://www.recetario.com"
+allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
+origins = allowed_origins_str.split(",")
 
 app.add_middleware(
     CORSMiddleware,
@@ -26,6 +26,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Logging (Basic setup)
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+@app.on_event("startup")
+async def startup_event():
+    logger.info("Application starting up...")
+
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="backend/static"), name="static")
