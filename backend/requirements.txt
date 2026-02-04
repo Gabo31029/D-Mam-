@@ -1,9 +1,15 @@
 fastapi
-uvicorn[standard]
+uvicorn
 sqlalchemy
-python-jose[cryptography]
-passlib[bcrypt]
-python-multipart
+pydantic
 python-dotenv
+jinja2
+python-multipart
+# PDF generation
 reportlab
 requests
+# Database & Storage
+psycopg2-binary
+supabase
+psycopg2-binary
+gunicorn
