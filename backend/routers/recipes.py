@@ -1,12 +1,13 @@
-
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
-import crud, models, schemas
+import crud
+import models
+import schemas
 from database import get_db
-from auth import get_current_user
-from pdf_generator import generate_recipe_pdf # Import the generator
+from routers.auth import get_current_user
+from pdf_generator import generate_recipe_pdf
 
 router = APIRouter(
     prefix="/recipes",
