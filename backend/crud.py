@@ -1,6 +1,6 @@
 
 from sqlalchemy.orm import Session, joinedload
-from . import models, schemas
+import models, schemas
 import bcrypt
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
