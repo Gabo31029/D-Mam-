@@ -28,6 +28,12 @@ def get_recipe_pdf(recipe_id: int, db: Session = Depends(get_db)):
     }
     return StreamingResponse(pdf_buffer, media_type="application/pdf", headers=headers)
 
+@router.get("/countries", response_model=List[str])
+def read_countries(db: Session = Depends(get_db)):
+    countries = crud.get_unique_countries(db)
+    # countries is a list of tuples (country,)
+    return [c[0] for c in countries if c[0]]
+
 @router.post("/", response_model=schemas.Recipe)
 def create_recipe(
     recipe: schemas.RecipeCreate, 

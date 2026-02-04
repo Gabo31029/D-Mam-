@@ -127,3 +127,6 @@ def delete_cookbook(db: Session, cookbook_id: int):
         db.delete(db_cookbook)
         db.commit()
     return db_cookbook
+
+def get_unique_countries(db: Session):
+    return db.query(models.Recipe.country).distinct().filter(models.Recipe.country.isnot(None)).all()
