@@ -69,7 +69,7 @@ const translateType = (type) => {
           v-model="filters.country"
           class="input-field max-w-[200px] cursor-pointer"
         >
-          <option value="">Todos los Países</option>
+          <option value="">Global</option>
           <option v-for="country in countries" :key="country" :value="country">
             {{ country }}
           </option>
