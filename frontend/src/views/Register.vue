@@ -36,7 +36,7 @@ const handleRegister = async () => {
 </script>
 
 <template>
-  <div class="flex justify-center items-center h-[80vh]">
+  <div class="flex justify-center items-center h-[80vh] px-4">
     <div
       class="card w-full max-w-md p-6 sm:p-10 border border-stone-200 shadow-none"
     >
