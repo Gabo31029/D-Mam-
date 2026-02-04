@@ -20,13 +20,27 @@ def get_cookbook_pdf(cookbook_id: int, db: Session = Depends(get_db)):
     if db_cookbook is None:
         raise HTTPException(status_code=404, detail="Cookbook not found")
         
-    # Generate PDF
-    pdf_buffer = generate_cookbook_pdf(db_cookbook, db_cookbook.owner.username)
+    # Generate PDF (bytes)
+    pdf_bytes = generate_cookbook_pdf(db_cookbook, db_cookbook.owner.username)
     
-    headers = {
-        'Content-Disposition': f'attachment; filename="{db_cookbook.title}.pdf"'
-    }
-    return StreamingResponse(pdf_buffer, media_type="application/pdf", headers=headers)
+    # Upload to Supabase
+    filename = f"cookbook_{cookbook_id}_{db_cookbook.title.replace(' ', '_')}.pdf"
+    try:
+        from ..services.storage import StorageService
+        public_url = StorageService.upload_pdf(pdf_bytes, filename)
+        
+        # Save URL to DB
+        # We need to update existing cookbook instance.
+        db_cookbook.pdf_url = public_url
+        db.commit()
+        db.refresh(db_cookbook)
+        
+        return {"url": public_url}
+    except Exception as e:
+        print(f"Error handling PDF: {e}")
+        # Fallback: returing styled error or original behavior if upload fails?
+        # Requirement says "Generar y guardar". 
+        raise HTTPException(status_code=500, detail="Error generating/uploading PDF")
 
 @router.post("/", response_model=schemas.Cookbook)
 def create_cookbook(

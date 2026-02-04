@@ -11,7 +11,6 @@ import os
 import requests
 
 # --- 🎨 CONFIGURACIÓN DE ESTILO DEL PDF ---
-# Modifica estos valores para personalizar el diseño de tus recetarios
 class PDFStyleConfig:
     # Colores (Hex codes)
     COLOR_TITLE = '#292524'      # Stone 800
@@ -19,20 +18,16 @@ class PDFStyleConfig:
     COLOR_META = '#78716c'       # Stone 500
     COLOR_TEXT = '#000000'       # Black
     
-    # Fuentes (ReportLab standard fonts: Helvetica, Times-Roman, Courier)
     FONT_TITLE = 'Helvetica-Bold'
     FONT_BODY = 'Helvetica'
     
-    # Tamaños de fuente
     SIZE_TITLE_MAIN = 24
     SIZE_TITLE_COVER = 36
     SIZE_HEADING = 16
     SIZE_BODY = 11
     SIZE_META = 10
     
-    # Espaciado
     SPACE_AFTER_TITLE = 30
-    SPACE_AFTER_SECTION = 12
 
 def get_custom_styles():
     """Genera los estilos basados en la configuración."""
@@ -93,6 +88,18 @@ def get_custom_styles():
         )
     }
 
+def get_image_from_url(url):
+    """Descarga imagen de URL y retorna archivo en memoria compatible (BytesIO)."""
+    if not url:
+        return None
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        return BytesIO(response.content)
+    except Exception as e:
+        print(f"Error downloading image {url}: {e}")
+        return None
+
 def build_recipe_stories(recipe, author_name, styles):
     """Construye el contenido de una sola receta."""
     story = []
@@ -110,75 +117,29 @@ def build_recipe_stories(recipe, author_name, styles):
 
     # Imagen
     if recipe.image_url:
-        try:
-            img_data = None
-            
-            # 1. Imagen Remota (http/https)
-            if recipe.image_url.startswith(('http://', 'https://')):
-                try:
-                    # Intentar descargar con timeout
-                    response = requests.get(recipe.image_url, timeout=5)
-                    if response.status_code == 200:
-                        img_data = BytesIO(response.content)
-                except Exception as e:
-                    print(f"Error descargando imagen remota {recipe.image_url}: {e}")
-            
-            # 2. Imagen Local (path relativo /static/...)
-            elif recipe.image_url.startswith('/static/'):
-                # Intentamos construir el path relativo en el sistema de archivos
-                # Eliminamos la barra inicial '/static/...' -> 'static/...'
-                relative_path = recipe.image_url.lstrip('/')
+        img_data = get_image_from_url(recipe.image_url)
+        
+        if img_data:
+            try:
+                img_data.seek(0)
+                utils_img = ImageReader(img_data)
+                orig_w, orig_h = utils_img.getSize()
+                aspect = orig_h / float(orig_w)
                 
-                # Buscamos en posibles ubicaciones (dependiendo de dónde se ejecute el backend)
-                possible_paths = [
-                    os.path.join('backend', relative_path), # Si corremos desde raiz del proyecto
-                    relative_path, # Si corremos desde carpeta backend
-                    os.path.join(os.getcwd(), 'backend', relative_path), # Absoluto
-                ]
+                target_w = 4.5 * inch
+                target_h = target_w * aspect
                 
-                for p in possible_paths:
-                    if os.path.exists(p):
-                        img_data = p
-                        break
-            
-            # 3. Imagen Local (Path absoluto o archivo directo)
-            elif os.path.exists(recipe.image_url):
-                 img_data = recipe.image_url
+                if target_h > 5 * inch:
+                    target_h = 5 * inch
+                    target_w = target_h / aspect
 
-            # Si logramos obtener la imagen (local path o BytesIO)
-            if img_data:
-                try:
-                    # Usamos ImageReader para leer dimensiones y calcular aspecto
-                    # Si es BytesIO, aseguramos estar al inicio
-                    if isinstance(img_data, BytesIO):
-                        img_data.seek(0)
-                    
-                    utils_img = ImageReader(img_data)
-                    orig_w, orig_h = utils_img.getSize()
-                    aspect = orig_h / float(orig_w)
-                    
-                    # Definir ancho objetivo (ej. 4.5 pulgadas)
-                    target_w = 4.5 * inch
-                    target_h = target_w * aspect
-                    
-                    # Limitar altura máxima (ej. 5 pulgadas)
-                    if target_h > 5 * inch:
-                        target_h = 5 * inch
-                        target_w = target_h / aspect
-
-                    # Resetear puntero si es BytesIO antes de pasar a ReportLabImage
-                    if isinstance(img_data, BytesIO):
-                        img_data.seek(0)
-
-                    rl_img = ReportLabImage(img_data, width=target_w, height=target_h)
-                    rl_img.hAlign = 'CENTER'
-                    story.append(rl_img)
-                    story.append(Spacer(1, 20))
-                except Exception as inner_e:
-                     print(f"Error procesando imagen: {inner_e}")
-                     
-        except Exception as e:
-            print(f"Error general cargando imagen: {e}")
+                img_data.seek(0)
+                rl_img = ReportLabImage(img_data, width=target_w, height=target_h)
+                rl_img.hAlign = 'CENTER'
+                story.append(rl_img)
+                story.append(Spacer(1, 20))
+            except Exception as e:
+                print(f"Error processing image for PDF: {e}")
 
     # Notas
     if recipe.notes:
@@ -222,16 +183,13 @@ def build_recipe_stories(recipe, author_name, styles):
     
     instructions_list = recipe.instructions.split('\n')
     
-    # Respetar el formato de instrucciones (numbered o plain)
     if recipe.instructions_format == "numbered":
-        # Formato enumerado
         for idx, step in enumerate(instructions_list):
             if step.strip():
                 step_text = f"<b>{idx + 1}.</b> {step.strip()}"
                 story.append(Paragraph(step_text, styles['Normal']))
                 story.append(Spacer(1, 8))
     else:
-        # Formato plano (sin números)
         for step in instructions_list:
             if step.strip():
                 story.append(Paragraph(step.strip(), styles['Normal']))
@@ -246,7 +204,7 @@ def generate_recipe_pdf(recipe, author_name):
     story = build_recipe_stories(recipe, author_name, styles)
     doc.build(story)
     buffer.seek(0)
-    return buffer
+    return buffer.getvalue()  # Return bytes directly
 
 def generate_cookbook_pdf(cookbook, author_name):
     buffer = BytesIO()
@@ -273,7 +231,6 @@ def generate_cookbook_pdf(cookbook, author_name):
         story.append(Paragraph("Sin recetas aún.", styles['Normal']))
     else:
         for i, recipe in enumerate(cookbook.recipes):
-            # Simple Link (simulated visual only for print)
             story.append(Paragraph(f"{i+1}. {recipe.title}", styles['Normal']))
             story.append(Spacer(1, 6))
             
@@ -281,11 +238,11 @@ def generate_cookbook_pdf(cookbook, author_name):
     
     # --- Recetas ---
     for i, recipe in enumerate(cookbook.recipes):
-        recipe_content = build_recipe_stories(recipe, None, styles) # Author already on cover
+        recipe_content = build_recipe_stories(recipe, None, styles)
         story.extend(recipe_content)
         if i < len(cookbook.recipes) - 1:
             story.append(PageBreak())
             
     doc.build(story)
     buffer.seek(0)
-    return buffer
+    return buffer.getvalue() # Return bytes directly
